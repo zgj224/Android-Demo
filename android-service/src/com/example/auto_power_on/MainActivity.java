@@ -1,4 +1,4 @@
-package com.example.auto_power_on;
+package com.example.auto_power_on; 
 
 import android.app.Activity;
 import android.os.Bundle;
