@@ -10,9 +10,9 @@ add_library( #设置要加载的动态库名称
 
              # 指定要编译的源码
              # C++实现JNI
-             # src/main/cpp/native-lib.cpp
+              src/main/cpp/native-lib.cpp
              # C实现JNI
-             src/main/cpp/native-lib.c
+             #src/main/cpp/native-lib.c
              )
 
 #设置生成的so动态库最后输出的路径（测试无效果）
