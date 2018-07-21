@@ -1,0 +1,54 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 27
+    defaultConfig {
+        applicationId "com.example.gjz.ndk_demo"
+        minSdkVersion 22
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        //1.使用哪个平台的so，就把编译出so从build/intermediates/cmake/debug/obj目录下拷贝出来即可
+        ndk {
+            abiFilters /*"armeabi",*/ "armeabi-v7a"
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    /*2.指定jniLibs库目录需要加下面这句,经AS3.2测试，去掉也没问题(可选)
+    编译好的so库在：build/intermediates/cmake/debug/obj目录下
+      需要手动创建src/main/jniLibs目录，编译好的so库放在jniLibs目录下面的armeabi/armeabi-v7a等平台拷贝过来就行
+     */
+    /*sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }*/
+
+    //3.有源码的情况：使用cmake编译c/c++源码(拷贝so到jniLibs目录下的时候，这句要注释掉)
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
