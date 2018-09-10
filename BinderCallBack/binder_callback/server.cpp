@@ -1,0 +1,72 @@
+#include <binder/IServiceManager.h>
+#include <binder/IBinder.h>
+#include <binder/Parcel.h>
+#include <binder/ProcessState.h>
+#include <binder/IPCThreadState.h>
+ 
+using namespace android;
+#ifdef LOG_TAG
+#undef LOG_TAG
+#endif
+
+#define LOG_TAG "sampleService"
+#define SAMPLE_SERIVCE_DES "sample.hello"
+#define SAMPLE_CB_SERIVCE_DES "android.os.SampleCallback"
+#define SRV_CODE 1
+#define CB_CODE 1
+
+class SampleService: public BBinder {
+public:
+  SampleService() {
+    mydescriptor = String16(SAMPLE_SERIVCE_DES);
+  }
+     
+  virtual ~SampleService() {
+  }
+
+  virtual const String16& getInterfaceDescriptor() const {
+    return mydescriptor;
+  }
+     
+protected:
+     
+  void callFunction() {
+    ALOGE( "Service callFunction-----------");
+  }
+     
+  virtual status_t onTransact(uint32_t code, const Parcel& data,
+			      Parcel* reply, uint32_t flags = 0) {
+    ALOGD( "Service onTransact, code = %d" , code);
+    switch (code) {
+    case SRV_CODE:
+      callback = data.readStrongBinder();
+      if (callback != NULL)
+	{
+	  Parcel _data, _reply;
+	  _data.writeInterfaceToken(String16(SAMPLE_CB_SERIVCE_DES));
+	  int ret = callback->transact(CB_CODE, _data, &_reply, 0);
+	}
+      callFunction();
+      break;
+    default:
+      return BBinder::onTransact(code, data, reply, flags);
+    }
+    return 0;
+  }
+
+private:
+  String16 mydescriptor;
+  sp<IBinder> callback;
+};
+
+int main() {
+  sp<IServiceManager> sm = defaultServiceManager();
+  SampleService* samServ = new SampleService();
+  status_t ret = sm->addService(String16(SAMPLE_SERIVCE_DES), samServ);
+
+  ALOGD("Service addservice");
+  ProcessState::self()->startThreadPool();
+  //IPCThreadState::self()->joinThreadPool( true);
+  while(1);
+  return 0;
+}
