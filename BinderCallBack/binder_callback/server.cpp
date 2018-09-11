@@ -40,11 +40,11 @@ protected:
     ALOGD( "Service onTransact,line = %d, code = %d",__LINE__, code);
     switch (code) {
     case SRV_CODE:
-
+      //读取Client传过来的IBinder对象
       callback = data.readStrongBinder();
 
       if(callback != NULL)
-      {
+       {
          Parcel _data, _reply;
          //_data.writeInterfaceToken(String16(SAMPLE_CB_SERIVCE_DES));
 
@@ -59,7 +59,7 @@ protected:
 	 // _data.writeString8(String8("are..."));
 	 // _data.writeString8(String8("you..."));
 	 //回调客户端
-	 int ret = callback->transact(CB_CODE, _data, &_reply, 0);
+         int ret = callback->transact(CB_CODE, _data, &_reply, 0);
        }
       //调用server端的
       callFunction(5555);
@@ -82,7 +82,7 @@ int main() {
 
   ALOGD("Service addservice");
   ProcessState::self()->startThreadPool();
-  //IPCThreadState::self()->joinThreadPool( true);
-  while(1);
+  IPCThreadState::self()->joinThreadPool( true);
+  //while(1);
   return 0;
 }

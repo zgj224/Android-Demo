@@ -83,12 +83,12 @@ int main()
      }
      Parcel _data,_reply;
      SampeCallback *callback = new SampeCallback();
-     //注册回调函数
+     //注册回调函数,把IBinder对象传到Server端,在Server用readStrongBinder()读出来.
      _data.writeStrongBinder(sp<IBinder>(callback));
      int ret = ibinder->transact(SRV_CODE, _data, &_reply, 0);
 
-//   ProcessState::self()->startThreadPool();
-//   IPCThreadState::self()->joinThreadPool();
-     while(1);
-     return 0;
+    ProcessState::self()->startThreadPool();
+    IPCThreadState::self()->joinThreadPool();
+// while(1);
+    return 0;
 }
