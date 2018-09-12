@@ -48,18 +48,18 @@ protected:
       val_1 = data.readInt32();
       val_2 = data.readInt32();
       val_3 = data.readInt32();
+
       ALOGE("Client ------------------------------ %d, read int32 = %d",__LINE__,val_1);
       ALOGE("Client ------------------------------ %d, read int32 = %d",__LINE__,val_2);
       ALOGE("Client ------------------------------ %d, read int32 = %d",__LINE__,val_3);
 
-
       //2.读取String8类型字符串;str_1.string()-->String8转换char类型数组
-      // str_1 = data.readString8();
-      // str_2 = data.readString8();
-      // str_3 = data.readString8();
-      // ALOGE("Client ------------------------------ %d, read String = %s",__LINE__,str_1.string());
-      // ALOGE("Client ------------------------------ %d, read String = %s",__LINE__,str_2.string());
-      // ALOGE("Client ------------------------------ %d, read String = %s",__LINE__,str_3.string());
+      str_1 = data.readString8();
+      str_2 = data.readString8();
+      str_3 = data.readString8();
+      ALOGE("Client ------------------------------ %d, read String = %s",__LINE__,str_1.string());
+      ALOGE("Client ------------------------------ %d, read String = %s",__LINE__,str_2.string());
+      ALOGE("Client ------------------------------ %d, read String = %s",__LINE__,str_3.string());
 
       callbackFunction(1234567);
       break;
@@ -85,6 +85,7 @@ int main()
      SampeCallback *callback = new SampeCallback();
      //注册回调函数,把IBinder对象传到Server端,在Server用readStrongBinder()读出来.
      _data.writeStrongBinder(sp<IBinder>(callback));
+     _data.writeInterfaceToken(String16(SAMPLE_CB_SERIVCE_DES));
      int ret = ibinder->transact(SRV_CODE, _data, &_reply, 0);
 
     ProcessState::self()->startThreadPool();

@@ -46,18 +46,20 @@ protected:
       if(callback != NULL)
        {
          Parcel _data, _reply;
-         //_data.writeInterfaceToken(String16(SAMPLE_CB_SERIVCE_DES));
+	 //size_t start = _data.dataPosition();
+	 //_data.writeInterfaceToken(String16(SAMPLE_CB_SERIVCE_DES));
 
-	 //3.int32类型,每次传输只能传一种数据类型,不能同时传String和int类型,但是可以传递多个值
-	 //写入数据通过Parcel传递给client端,用readInt32()读出来即可.
+	 //3.int32类型;写入数据通过Parcel传递给client端,用readInt32()读出来即可.
 	 _data.writeInt32(7777777);
 	 _data.writeInt32(8888888);
 	 _data.writeInt32(9999999);
 
-	 //2.String8类型,每次传输只能传一种数据类型,不能同时传String和int类型,但是可以传递多个值
-	 // _data.writeString8(String8("Hello..."));
-	 // _data.writeString8(String8("are..."));
-	 // _data.writeString8(String8("you..."));
+	 //2.String8类型
+	 _data.writeString8(String8("Hello..."));
+	 _data.writeString8(String8("are..."));
+	 _data.writeString8(String8("you..."));
+
+	 //_data.setDataPosition(start);
 	 //回调客户端
          int ret = callback->transact(CB_CODE, _data, &_reply, 0);
        }
