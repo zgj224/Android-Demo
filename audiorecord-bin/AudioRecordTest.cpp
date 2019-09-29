@@ -68,8 +68,8 @@ static void * AudioRecordThread(int sample_rate, int channels, void *fileName)
 
   g_iNotificationPeriodInFrames = sampleRateInHz/10;
 
-  pAudioRecord  = new android::AudioRecord(String16("Record"));
-  //pAudioRecord  = new AudioRecord();
+  pAudioRecord  = new android::AudioRecord(String16("Record")); //Android7.1 api
+  //pAudioRecord  = new AudioRecord(); //Android4.4 api
   if(NULL == pAudioRecord)
     {
       ALOGE(" create native AudioRecord failed! ");
