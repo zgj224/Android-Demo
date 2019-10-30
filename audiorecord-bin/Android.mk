@@ -6,8 +6,8 @@ LOCAL_SHARED_LIBRARIES := \
 	libcutils \
 	libutils \
         libmedia
-LOCAL_MODULE:= AudioRecordTest
-LOCAL_MODULE_TAGS := tests
+LOCAL_MODULE:= audio_record
+LOCAL_MODULE_TAGS := optional
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
@@ -19,5 +19,5 @@ LOCAL_SHARED_LIBRARIES := \
 	libutils \
     libmedia
 LOCAL_MODULE:= pcm2wav
-LOCAL_MODULE_TAGS := tests
+LOCAL_MODULE_TAGS := optional
 include $(BUILD_EXECUTABLE)
