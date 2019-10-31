@@ -17,12 +17,7 @@ static void *AudioRecordThread(int sample_rate, int channels, void *fileName){
   audio_channel_mask_t channelConfig  = AUDIO_CHANNEL_IN_MONO;
 
   g_pAudioRecordFile = fopen((char *)fileName, "wb+");
-  if(channels == 2){
-    channelConfig = AUDIO_CHANNEL_IN_STEREO;
-  }else if(channels == 4){
-    //channelConfig = AUDIO_CHANNEL_IN_4POINT1;//AUDIO_CHANNEL_IN_4POINT1 = 0x8000000f;
-    channelConfig = audio_channel_in_mask_from_count(4);
-  }
+  channelConfig = audio_channel_in_mask_from_count(channels);
   printf("sample_rate = %d, channels = %d, channelConfig = 0x%x\n", sample_rate, channels, channelConfig);
   frameSize = channels * iBytesPerSample;
   android::status_t status = android::AudioRecord::getMinFrameCount(&minFrameCount, sample_rate, AUDIO_FORMAT_PCM_16_BIT, channelConfig);
