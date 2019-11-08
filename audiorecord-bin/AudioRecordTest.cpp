@@ -18,7 +18,8 @@ static void *AudioRecordThread(int sample_rate, int channels, void *fileName){
 
   g_pAudioRecordFile = fopen((char *)fileName, "wb+");
   
-  channelConfig = audio_channel_in_mask_from_count(channels);//将channels通道数转换成掩码传下去,在hal层再把掩码转换成通道数
+  channelConfig = audio_channel_in_mask_from_count(channels);//将channels通道数转换成掩码传下去
+  //audio_channel_count_from_in_mask(channelMask); //将掩码转换成channel
 
   printf("sample_rate = %d, channels = %d, channelConfig = 0x%x\n", sample_rate, channels, channelConfig);
   frameSize = channels * iBytesPerSample;
