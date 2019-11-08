@@ -32,6 +32,7 @@ public class MainActivity extends Activity implements OnClickListener {
   public int sampleRate = 16000;
   //单声道:CHANNEL_IN_MONO; 立体声：CHANNEL_IN_STEREO
   public int CHANNELS = AudioFormat.CHANNEL_IN_STEREO;
+  //public int inpuSource = MediaRecorder.AudioSource.REMOTE_SUBMIX; //截取远端speaker或耳机里playback音频
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
