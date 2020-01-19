@@ -1,0 +1,1 @@
+TouchLatency源码路径:frameworks/base/tests/TouchLatency
