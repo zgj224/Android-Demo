@@ -1,0 +1,48 @@
+cc_library_shared {
+    name: "android.hardware.led@1.0-impl",
+    relative_install_path: "hw",
+    proprietary: true,
+    srcs: [
+        "Led.cpp",
+    ],
+    shared_libs: [
+        "liblog",
+        "libhidlbase",
+        "libhidltransport",
+        "libutils",
+        "android.hardware.led@1.0",
+    ],
+}
+
+cc_binary {
+    name: "android.hardware.led@1.0-service",
+    srcs: ["service.cpp",
+          "Led.cpp"],
+
+    shared_libs: [
+        "liblog",
+        "libhardware",
+        "libhidlbase",
+        "libhidltransport",
+        "libutils",
+        "android.hardware.led@1.0",
+    ],
+
+}
+
+// cc_binary {
+//     relative_install_path: "hw",
+//     defaults: ["hidl_defaults"],
+//     name: "led_client",
+//     proprietary: true,
+//     srcs: ["led_client.cpp"],
+
+//     shared_libs: [
+//         "liblog",
+//         "libhardware",
+//         "libhidlbase",
+//         "libhidltransport",
+//         "libutils",
+//         "android.hardware.led@1.0",
+//     ],
+// }

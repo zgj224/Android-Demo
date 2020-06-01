@@ -1,0 +1,209 @@
+HIDL demo
+
+//"/dev/binder" "/dev/vndbinder" "/dev/hwbinder"
+frameworks/native/libs/binder/ProcessState.cpp:74:    gProcess = new ProcessState("/dev/binder");
+frameworks/native/cmds/service/service.cpp:92:    ProcessState::initWithDriver("/dev/vndbinder");
+system/libhwbinder/ProcessState.cpp:330:    int fd = open("/dev/hwbinder", O_RDWR | O_CLOEXEC);
+
+hidl-gen.sh和./hardware/interfaces/update-makefiles.sh自动生成以下文件
+hardware/interface/led/Android.bp
+hardware/interface/led/1.0/Android.bp
+hardware/interface/led/1.0/Android.mk
+hardware/interface/led/1.0/default/Android.bp //自动生成后需要修改生成bin
+hardware/interface/led/1.0/default/Led.cpp //自动生成后需要修改实现
+hardware/interface/led/1.0/default/Led.h
+
+1.编写.hal文件
+# mkdir -p hardware/interfaces/led/1.0/default
+# cd hardware/interfaces/led/1.0
+
+# emacs ILed.hal
+package android.hardware.led@1.0;                                                                                                                                                                        
+interface ILed.hal{                                                                                                                                                                                          
+  helloWorld(string name) generates (string result);                                                                                                                                                        
+}
+
+2.使用hidl-gen.sh工具,.hal生成.cpp/.h文件
+#!/bin/bash                                                                                                                                                                                                
+PACKAGE=android.hardware.led@1.0                                                                                                                                                                         
+LOC=hardware/interfaces/led/1.0/default                                                                                                                                                                 
+# make hidl-gen -j16 //无hidl-gen时,编译.
+hidl-gen -o $LOC -Lc++-impl -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport $PACKAGE                                                                                        
+hidl-gen -o $LOC -Landroidbp-impl -randroid.hardware:hardware/interfaces -randroid.hidl:system/libhidl/transport $PACKAGE //可选
+
+# cd ~/android //android最外层目录
+//在hardware/interfaces/led/1.0/default生成Android.bp, Led.cpp, Led.h
+# ./hidl-gen.sh
+
+3.
+<1>.更新Makefile, 在hardware/interfaces/led/1.0目录下自动生成Android.mk,Android.bp
+# ./hardware/interfaces/update-makefiles.sh
+# mmm hardware/interfaces/led/1.0
+# touch hardware/interfaces/led/1.0/default/android.hardware.led@1.0-service.rc
+# touch hardware/interfaces/led/1.0/default/service.cpp
+
+<2>.实现:android.hardware.led@1.0-service.rc
+service led_hal_service /vendor/bin/hw/android.hardware.led@1.0-service                                                                                                                                    
+    class hal                                                                                                                                                                                              
+    user system                                                                                                                                                                                            
+    group system
+
+<3>.实现HIDL Service :service.cpp
+#define LOG_TAG "android.hardware.led@1.0-service"                                                                                                                                                          
+                                                                                                                                                                                                            
+#include <android/hardware/led/1.0/ILed.h>                                                                                                                                                                  
+#include <hidl/LegacySupport.h>                                                                                                                                                                             
+#include "led.h"                                                                                                                                                                                            
+using android::hardware::led::V1_0::ILed;                                                                                                                                                                   
+using android::hardware::led::V1_0::implementation::led;                                                                                                                                                    
+using android::hardware::defaultPassthroughServiceImplementation;                                                                                                                                           
+using android::hardware::configureRpcThreadpool;                                                                                                                                                            
+using android::hardware::joinRpcThreadpool;                                                                                                                                                                 
+using android::sp;                                                                                                                                                                                          
+                                                                                                                                                                                                            
+int main() {                                                                                                                                                                                                
+#if 0                                                                                                                                                                                                       
+  // Passthrough   dlopen so方式                                                                                                                                                                            
+  return defaultPassthroughServiceImplementation<Iled>();                                                                                                                                                   
+#else                                                                                                                                                                                                       
+  // Binder 方式                                                                                                                                                                                            
+  sp<ILed> service = new led();                                                                                                                                                                             
+  configureRpcThreadpool(1, true /*callerWillJoin*/);                                                                                                                                                       
+  service->registerAsService();                                                                                                                                                                             
+  joinRpcThreadpool();                                                                                                                                                                                      
+#endif                                                                                                                                                                                                      
+}
+
+<4>.配置system/libhidl/manifiest.xml
+开发板路径: /system/manifest.xml Or /vendor/manifest.xml
+# emacs system/libhidl/manifiest.xml
+<hal format="hidl">                                                                                                                                                                                       
+    <name>android.hardware.led</name>                                                                                                                                                                       
+    <!-- hwbinder: Binder模式; passthrough: 直通模式(fopen so)-->                                                                                                                                           
+    <transport>hwbinder</transport>                                                                                                                                                                         
+    <version>1.0</version>                                                                                                                                                                                  
+    <interface>                                                                                                                                                                                             
+      <name>ILed</name>                                                                                                                                                                                     
+      <instance>default</instance>                                                                                                                                                                          
+    </interface>                                                                                                                                                                                            
+  </hal> 
+
+# adb push manifiest.xml /system
+重启开发板
+
+4.Server端编译
+# emacs hardware/interfaces/led/1.0/default/Android.bp //添加可执行程序
+cc_binary {                                                                                                                                                                                                 
+    name: "android.hardware.led@1.0-service",                                                                                                                                                               
+    srcs: ["service.cpp",                                                                                                                                                                                   
+                        "ledImpl.cpp"],                                                                                                                                                                     
+                                                                                                                                                                                                            
+    shared_libs: [                                                                                                                                                                                          
+        "liblog",                                                                                                                                                                                           
+        "libhardware",                                                                                                                                                                                      
+        "libhidlbase",                                                                                                                                                                                      
+        "libhidltransport",                                                                                                                                                                                 
+        "libutils",                                                                                                                                                                                         
+        "android.hardware.led@1.0",                                                                                                                                                                         
+    ],                                                                                                                                                                                                      
+                                                                                                                                                                                                            
+}
+
+//编译
+# mmm hardware/interfaces/led/1.0/default
+
+system/bin/android.hardware.led@1.0-service //server端可执行程序
+
+system/lib64/android.hardware.led@1.0.so //server端定义的so
+system/lib/android.hardware.led@1.0.so
+
+vendor/lib64/hw/android.hardware.led@1.0-impl.so //server端实现hwbinder的so
+vendor/lib/hw/android.hardware.led@1.0-impl.so
+
+5.Client端
+<1>.C++版
+# cd hardware/interfaces/led/1.0/default
+# emacs Android.bp　//添加
+cc_binary {                                                                                                                                                                                                 
+    relative_install_path: "hw",                                                                                                                                                                            
+    defaults: ["hidl_defaults"],                                                                                                                                                                            
+    name: "led_client",                                                                                                                                                                                     
+    proprietary: true,                                                                                                                                                                                      
+    srcs: ["led_client.cpp"],                                                                                                                                                                               
+                                                                                                                                                                                                            
+    shared_libs: [                                                                                                                                                                                          
+        "liblog",                                                                                                                                                                                           
+        "libhardware",                                                                                                                                                                                      
+        "libhidlbase",                                                                                                                                                                                      
+        "libhidltransport",                                                                                                                                                                                 
+        "libutils",                                                                                                                                                                                         
+        "android.hardware.led@1.0",                                                                                                                                                                         
+    ],                                                                                                                                                                                                      
+                                                                                                                                                                                                            
+}
+
+# emacs led_client.cpp
+#define LOG_TAG "LED_CLINET"                                                                                                                                                                                
+#include <android/hardware/led/1.0/ILed.h>                                                                                                                                                                  
+#include <log/log.h>                                                                                                                                                                                        
+                                                                                                                                                                                                            
+using android::hardware::led::V1_0::ILed;                                                                                                                                                                   
+using android::hardware::hidl_vec;                                                                                                                                                                          
+using android::hardware::hidl_string;                                                                                                                                                                       
+using android::sp;                                                                                                                                                                                          
+                                                                                                                                                                                                            
+                                                                                                                                                                                                            
+int main(){                                                                                                                                                                                                 
+  sp<ILed> service = ILed::getService();                                                                                                                                                                    
+  if( service == nullptr ){                                                                                                                                                                                 
+    ALOGE("Can't find ILed service...");                                                                                                                                                                    
+    return -1;                                                                                                                                                                                              
+  }                                                                                                                                                                                                         
+                                                                                                                                                                                                            
+  ALOGE("zgj---------->%s(), line = %d",__FUNCTION__,__LINE__);                                                                                                                                             
+  service->helloWorld("HIDL!!!!",[&](hidl_string result){                                                                                                                                                   
+    ALOGE("zgj---------->%s(), line = %d, result = %s",__FUNCTION__,__LINE__,result.c_str());                                                                                                               
+  });                                                                                                                                                                                                       
+  ALOGE("zgj---------->%s(), line = %d",__FUNCTION__,__LINE__);                                                                                                                                             
+                                                                                                                                                                                                            
+  return 0;                                                                                                                                                                                                 
+}
+
+//编译
+# mmm hardware/interfaces/led/1.0/default
+vendor/bin/hw/led_client //client端测试demo
+
+//将32/64位so和bin push到开发板
+# adb push vendor_lib_hw/android.hardware.led@1.0-impl.so /vendor/lib/hw
+# adb push vendor_lib64_hw/android.hardware.led@1.0-impl.so /vendor/lib64/hw
+# adb push system_lib64/android.hardware.led@1.0.so /system/lib64
+# adb push system_lib/android.hardware.led@1.0.so /system/lib
+# adb push server_system_bin/android.hardware.led@1.0-service /system/bin
+# adb push led_client /system/bin
+# adb push manifest.xml /system　//需要重启
+
+
+# adb logcat -s android.hardware.led@1.0-service LED_CLINET led_server
+//启动server端
+# /system/bin/android.hardware.led@1.0-service
+
+//启动client端
+# /system/bin/led_client
+
+
+<2>.Client端app版
+# make update-api -j16
+# mmm hardware/interfaces/led/1.0
+# mmm hardware/interfaces/led/1.0/default
+
+# setenforce 0
+
+
+
+
+
+
+
+
+
+
